@@ -1,0 +1,202 @@
+﻿@page "/vendas/iniciar-vendas"
+
+@using System.Globalization
+@using MetaPDV.Components.Pages.Estoque
+@using MetaPDV.Models
+@using MetaPDV.Models.Vendas
+@using MetaPDV.Services
+@inject MercadoriaService MercadoriaService
+@inject VendaService vendaService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<MudPaper Class="d-flex align-center justify-center min-h-screen pb-4 mt-4 shadow-4 rounded-paper margin-bottom" Elevation="4">
+    <MudContainer>
+        <MudGrid>
+            <!-- Primeiro Container: Informações do Último Item -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="d-flex flex-column align-center justify-center pb-4 mt-4" Elevation="1">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Último Produto</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center">
+                        @if (ultimoItem?.Produto != null)
+                        {
+                            <MudText Typo="Typo.h4" Color="Color.Primary">@ultimoItem.Quantidade X @ultimoItem.Produto.Nome</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.h4" Color="Color.Primary">Nenhum item adicionado</MudText>
+                        }
+                    </MudText>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Segundo Container: Valor Total -->
+            <MudItem xs="12" md="6">
+                <MudPaper Class="d-flex flex-column align-center justify-center pb-4 mt-4" Elevation="1">
+                    <MudText Typo="Typo.h6" GutterBottom="true">Valor Total</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary">@totalValue.ToString("C", new CultureInfo("pt-BR"))</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+<MudPaper Class="d-flex align-center justify-center min-h-screen pb-4 mt-4 shadow-4 rounded-paper margin-bottom" Elevation="4">
+    <MudContainer>
+        <MudText Typo="Typo.h6" Class="d-flex flex-column align-center justify-center pb-4 mt-4" GutterBottom="true">Adicionar Venda</MudText>
+
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudAutocomplete T="Mercadoria"
+                                 Label="Selecione o Produto"
+                                 @bind-Value="selectedProduct"
+                                 SearchFunc="SearchProducts"
+                                 ToStringFunc="@(item => item?.Nome ?? string.Empty)"
+                                 ItemSelected="OnProductSelected"
+                                 Variant="Variant.Text" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="quantity" Label="Quantidade" Type="number" Min="1" Variant="Variant.Text" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton OnClick="AddProduct" Color="Color.Primary" Variant="Variant.Filled" FullWidth="true">Adicionar</MudButton>
+            </MudItem>
+            <MudItem xs="12">
+                <MudButton OnClick="ShowConfirmDialog" Color="Color.Secondary" Variant="Variant.Filled" FullWidth="true">Finalizar Compra</MudButton>
+            </MudItem>
+        </MudGrid>
+
+        <MudTable Items="@salesItems" Hover="true" Breakpoint="Breakpoint.Sm" FixedHeader="@fixed_header" FixedFooter="@fixed_footer" Height="@(fixed_header || fixed_footer ? "400px" : "")" Striped="true">
+            <HeaderContent>
+                <MudTh>Nome</MudTh>
+                <MudTh>Quantidade</MudTh>
+                <MudTh>Preço</MudTh>
+                <MudTh>Preço Total</MudTh>
+                <MudTh>Ações</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Nome">@context.Produto.Nome</MudTd>
+                <MudTd DataLabel="Quantidade">@context.Quantidade</MudTd>
+                <MudTd DataLabel="Preço">@context.Produto.Preco.ToString("C", new CultureInfo("pt-BR"))</MudTd>
+                <MudTd DataLabel="Preço Total">@((@context.Produto.Preco * @context.Quantidade).ToString("C", new CultureInfo("pt-BR")))</MudTd>
+                <MudTd>
+                    <MudButton OnClick="() => RemoveItem(context)" Color="Color.Error" Variant="Variant.Text">
+                        <MudIcon Icon="@Icons.Material.Filled.Delete" />
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+
+        <MudPaper Class="p-4 mt-4" Elevation="1">
+            <MudText Typo="Typo.h6" GutterBottom="true">Valor Total</MudText>
+            <MudText Typo="Typo.h4" Color="Color.Primary">@totalValue.ToString("C", new CultureInfo("pt-BR"))</MudText>
+        </MudPaper>
+    </MudContainer>
+</MudPaper>
+@{
+    var total = $"O valor total foi de {@totalValue.ToString("C", new CultureInfo("pt-BR"))}";
+}
+<ConfirmDialog ShowDialog="@showDialog" ContentText="Finalizar compra?" Total="totalValue" TotalText="@total" OnClose="OnDialogClose" />
+
+@code {
+    bool fixed_header = true;
+    bool fixed_footer = false;
+    bool showDialog = false;
+
+
+    private IEnumerable<Mercadoria> products = new List<Mercadoria>();
+    private List<SalesItem> salesItems = new List<SalesItem>();
+    private Mercadoria selectedProduct; 
+    private int quantity;
+    private decimal totalValue;
+    private SalesItem ultimoItem = new SalesItem();
+    private Venda SalvarVenda = new Venda();
+
+    protected override async Task OnInitializedAsync()
+    {
+        products = await MercadoriaService.ListarMercadorias();
+    }
+
+    private void AddProduct()
+    {
+        if (selectedProduct != null && quantity > 0)
+        {
+            salesItems.Add(new SalesItem { Produto = selectedProduct, Quantidade = quantity });
+            SalvarVenda.Itens.Add(new ItemVenda { MercadoriaInfo = selectedProduct, Quantidade = quantity, Total = quantity * selectedProduct.Preco});
+            quantity = 0; 
+            CalculateTotalValue();
+            ultimoItem = salesItems.LastOrDefault();
+            selectedProduct = null;
+        }
+        else
+        {
+            Snackbar.Add("Selecione um produto e insira uma quantidade válida.", Severity.Warning);
+        }
+    }
+
+    private void RemoveItem(SalesItem item)
+    {
+        salesItems.Remove(item);
+        CalculateTotalValue();
+        ultimoItem = salesItems.LastOrDefault();
+    }
+
+    private void CalculateTotalValue()
+    {
+        totalValue = salesItems.Sum(item => item.Produto.Preco * item.Quantidade);
+    }
+
+    private void ShowConfirmDialog()
+    { 
+        if (!SalvarVenda.Itens.Any())
+        {
+            Snackbar.Add("Não é possivel finalizar uma comprs sem produtos!", Severity.Warning);
+            return;
+        }
+        showDialog = true;
+    }
+
+    private async Task OnDialogClose(bool confirmed)
+    {
+       
+        showDialog = false;
+        if (confirmed)
+        {
+            await FinalizeSale();
+        }
+    }
+
+    private async Task FinalizeSale()
+    {
+        
+        // Implementar a lógica para salvar os itens
+        await vendaService.AdicionarVenda(SalvarVenda);
+
+        Snackbar.Add("Compra finalizada com sucesso!", Severity.Success);
+        salesItems.Clear();
+        CalculateTotalValue();
+        ultimoItem = null;
+    }
+
+
+    private Task<IEnumerable<Mercadoria>> SearchProducts(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return Task.FromResult(Enumerable.Empty<Mercadoria>());
+        }
+
+        // Filtra a lista de produtos com base na entrada do usuário.
+        var filteredProducts = products.Where(p => p.Nome.Contains(value, StringComparison.OrdinalIgnoreCase) || p.CodigoBarras.Contains(value));
+        return Task.FromResult(filteredProducts);
+    }
+
+    private void OnProductSelected(Mercadoria product)
+    {
+        if (product != null)
+        {
+            selectedProduct = product;
+        }
+    }
+}

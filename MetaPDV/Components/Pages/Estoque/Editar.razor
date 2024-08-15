@@ -1,0 +1,64 @@
+﻿@page "/estoque/editar/{Id:int}"
+@inject NavigationManager Navigation
+@inject MercadoriaService MercadoriaService
+@using MetaPDV.Models
+@using MetaPDV.Services
+@using MudBlazor
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">Editar Mercadoria</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="mercadoria.CodigoBarras" Label="Código de Barras" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudTextField @bind-Value="mercadoria.Nome" Label="Nome" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudNumericField T="decimal" @bind-Value="mercadoria.Preco" Label="Preço" Variant="Variant.Text" Margin="Margin.Dense"></MudNumericField>
+                    <MudTextField @bind-Value="mercadoria.QuantidadeEstoque" Label="Quantidade em Estoque" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudTextField @bind-Value="mercadoria.QuantidadeMinima" Label="Quantidade Mínima" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <br />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="SalvarAlteracoes">Salvar Alterações</MudButton>
+                    <MudButton OnClick='() => Navigation.NavigateTo("/estoque")' Color="Color.Secondary">Voltar</MudButton>
+                </MudCardContent>
+            </MudCard>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private Mercadoria mercadoria = new Mercadoria();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            mercadoria = await MercadoriaService.BuscarMercadoriaPorId(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao buscar mercadoria: {ex.Message}");
+            // Opcional: Adicionar uma notificação ao usuário
+        }
+    }
+
+    private async Task SalvarAlteracoes()
+    {
+        try
+        {
+            await MercadoriaService.AtualizarMercadoria(mercadoria);
+            Navigation.NavigateTo("/estoque");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erro ao salvar alterações: {ex.Message}");
+            // Opcional: Adicionar uma notificação ao usuário
+        }
+    }
+}

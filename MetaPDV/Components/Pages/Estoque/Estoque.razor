@@ -1,0 +1,106 @@
+﻿@page "/estoque"
+
+@using System.Net.Http.Json
+@using MetaPDV.Components.Pages.Estoque
+@using MetaPDV.Models
+@using MetaPDV.Services
+@using MudBlazor
+@inject MercadoriaService mercadoriaService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+<MudItem>
+    <MudText Class="d-flex align-center justify-center min-h-screen p-4 shadow-4 rounded-paper margin-bottom" Typo="Typo.h5" Color="Color.Primary">Estoque de Produtos</MudText>
+</MudItem>
+<MudSpacer />
+<MudItem xs="6" Class="mb-3">
+    <MudButton OnClick='() => Navigation.NavigateTo("/estoque/cadastrar")' Color="Color.Primary" Variant="Variant.Filled">
+        Adicionar Novo
+    </MudButton>
+</MudItem>
+<MudTable Items="@MercadoriaDb" Filter="new Func<Mercadoria,bool>(FilterFunc)"
+          @bind-SelectedItem="selectedItem1" SortLabel="Sort By" CommitEditTooltip="Commit Edit">
+    <ToolBarContent>        
+            <MudTextField @bind-Value="searchString" Placeholder="Buscar Produto" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+    </ToolBarContent>
+    <HeaderContent>
+        <MudTh><MudTableSortLabel SortBy="new Func<Mercadoria, object>(x=>x.Id)">Id</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Mercadoria, object>(x=>x.CodigoBarras)">Codigo Barras</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel InitialDirection="SortDirection.Ascending" SortBy="new Func<Mercadoria, object>(x=>x.Nome)">Nome</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Mercadoria, object>(x=>x.QuantidadeEstoque)">Quantidade em Estoque</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Mercadoria, object>(x=>x.QuantidadeMinima)">Quantidade Minima</MudTableSortLabel></MudTh>
+        <MudTh><MudTableSortLabel SortBy="new Func<Mercadoria, object>(x=>x.Total.ToString())">Valor Total</MudTableSortLabel></MudTh>
+        <MudTh>Ações</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="CodigoBarras">@context.CodigoBarras</MudTd>
+        <MudTd DataLabel="Nome">@context.Nome</MudTd>
+        <MudTd DataLabel="Quantidade Estoque">@context.QuantidadeEstoque</MudTd>
+        <MudTd DataLabel="Quantidade Minima">@context.QuantidadeMinima</MudTd>
+        <MudTd DataLabel="Total">@context.Total.ToString()</MudTd>
+        <MudTd>
+            <MudButton OnClick="() => EditItem(context.Id)" Color="Color.Primary" Variant="Variant.Text">
+                <MudIcon Icon="@Icons.Material.Filled.Edit" />
+            </MudButton>
+            <MudButton OnClick="() => ShowConfirmDialog(context)" Color="Color.Error" Variant="Variant.Text">
+                <MudIcon Icon="@Icons.Material.Filled.Delete" />
+            </MudButton>
+        </MudTd>
+    </RowTemplate>
+</MudTable>
+<DeletarDialog ShowDialog="@showDialog" ContentText="Realmente deseja excluir o item?" ItemDelete="deletarItem" OnClose="OnDialogClose" />
+
+@code {
+
+    private bool isDialogOpen = false;
+    private int itemIdToDelete;
+    private Mercadoria deletarItem;
+    bool showDialog = false;
+
+
+    private void EditItem(int id)
+    {
+        Navigation.NavigateTo($"/estoque/editar/{id}");
+    }
+
+    private void ShowConfirmDialog(Mercadoria mercadoria)
+    {
+        deletarItem = mercadoria;
+        showDialog = true;
+
+    }
+
+    private async Task OnDialogClose(bool confirmed)
+    {
+
+        showDialog = false;
+        if (confirmed)
+        {
+            await mercadoriaService.ExcluirMercadoria(deletarItem.Id);
+            MercadoriaDb = await mercadoriaService.ListarMercadorias();
+        }
+    }
+
+    private string searchString = "";
+    private Mercadoria selectedItem1 = null;
+    private HashSet<Mercadoria> selectedItems1 = new HashSet<Mercadoria>();
+    private IEnumerable<Mercadoria> MercadoriaDb = new List<Mercadoria>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        MercadoriaDb = await mercadoriaService.ListarMercadorias();
+    }
+
+    private bool FilterFunc(Mercadoria element)
+    {
+        if (string.IsNullOrWhiteSpace(searchString))
+            return true;
+        if (element.Id.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.CodigoBarras.ToString().Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        if (element.Nome.Contains(searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+}

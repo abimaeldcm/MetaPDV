@@ -1,0 +1,75 @@
+﻿@page "/vendsa"
+@using MetaPDV.Models
+@using MetaPDV.Models.Vendas
+@using MetaPDV.Services
+@inject MercadoriaService MercadoriaService
+@inject VendaService VendaService
+
+<h3>Tela de Venda</h3>
+
+<EditForm Model="@novaVenda">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label>Mercadoria:</label>
+        <select @bind="mercadoriaSelecionada">
+            @foreach (var mercadoria in mercadorias)
+            {
+                <option value="@mercadoria.Id">@mercadoria.Nome</option>
+            }
+        </select>
+    </div>
+    <div>
+        <label>Quantidade:</label>
+        <InputNumber @bind-Value="quantidade" />
+    </div>
+    <button @onclick="AdicionarItem">Adicionar Item</button>
+
+    <h4>Itens de Venda</h4>
+    <ul>
+        @foreach (var item in novaVenda.Itens)
+        {
+            <li>@item.MercadoriaInfo.Nome - @item.Quantidade x @item.MercadoriaInfo.Preco = @item.Total</li>
+        }
+    </ul>
+
+    <button @onclick="FinalizarVenda">Finalizar Venda</button>
+    <button @onclick="CancelarVenda">Cancelar Venda</button>
+</EditForm>
+
+@code {
+    private List<Mercadoria> mercadorias;
+    private int mercadoriaSelecionada;
+    private int quantidade;
+    private Venda novaVenda = new Venda();
+
+    protected override async Task OnInitializedAsync()
+    {
+        mercadorias = (await MercadoriaService.ListarMercadorias()).ToList();
+    }
+
+    private void AdicionarItem()
+    {
+        var mercadoria = mercadorias.FirstOrDefault(m => m.Id == mercadoriaSelecionada);
+        if (mercadoria != null)
+        {
+            novaVenda.Itens.Add(new ItemVenda
+                {
+                    MercadoriaInfo = mercadoria,
+                    Quantidade = quantidade
+                });
+        }
+    }
+
+    private async Task FinalizarVenda()
+    {
+        await VendaService.AdicionarVenda(novaVenda);
+        novaVenda = new Venda(); // Limpar venda
+    }
+
+    private void CancelarVenda()
+    {
+        novaVenda = new Venda(); // Limpar venda
+    }
+} 

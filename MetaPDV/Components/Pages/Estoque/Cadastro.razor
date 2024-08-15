@@ -1,0 +1,76 @@
+﻿@page "/estoque/cadastrar"
+@using MetaPDV.Models
+@using MetaPDV.Services
+@inject MercadoriaService MercadoriaService
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
+@inject NavigationManager Navigation
+
+@rendermode InteractiveServer
+
+<MudGrid>
+    <MudItem xs="12" sm="7">
+        <MudPaper Class="pa-4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h5" Color="Color.Primary">Cadastro de Mercadoria</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTextField @bind-Value="novaMercadoria.CodigoBarras" Label="Codigo de Barras" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudTextField @bind-Value="novaMercadoria.Nome" Label="Nome" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudNumericField T="decimal" @bind-Value="novaMercadoria.Preco" Label="Preço" Variant="Variant.Text" Margin="Margin.Dense"></MudNumericField>
+                    <MudTextField @bind-Value="novaMercadoria.QuantidadeEstoque" Label="Quantidade em Estoque" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <MudTextField @bind-Value="novaMercadoria.QuantidadeMinima" Label="Quantidade Mínima" Variant="Variant.Text" Margin="Margin.Dense"></MudTextField>
+                    <br />
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="AdicionarMercadoria">Adicionar Mercadoria</MudButton>
+                    <MudButton OnClick='() => Navigation.NavigateTo("/estoque")' Color="Color.Secondary">Voltar</MudButton>
+
+                </MudCardContent>
+            </MudCard>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="5">
+        <MudPaper Class="pa-4 mud-height-full">
+            <MudText Typo="Typo.subtitle2" Color="Color.Primary">@($"Últimos produtos adicionados ({MercadoriasAdd.Count})")</MudText>
+
+
+            <MudTable Items="@MercadoriasAdd" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>Nome</MudTh>
+                    <MudTh>Preço</MudTh>
+                    <MudTh>Quantidade</MudTh>
+                    <MudTh>Preço Total</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Nome">@context.Nome</MudTd>
+                    <MudTd DataLabel="Preço">@context.Preco.ToString("C", new CultureInfo("pt-BR"))</MudTd>
+                    <MudTd DataLabel="Quantidade">@context.QuantidadeEstoque</MudTd>
+                    <MudTd DataLabel="Preço Total">@((@context.Preco * @context.QuantidadeEstoque).ToString("C", new CultureInfo("pt-BR")))</MudTd>
+                    
+                </RowTemplate>
+            </MudTable>
+
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+@code {
+    bool success;
+    List<Mercadoria> MercadoriasAdd = new List<Mercadoria>();
+    MudTextField<string> pwField1;
+    MudForm form;
+
+    private Mercadoria novaMercadoria = new Mercadoria();
+
+    private async Task AdicionarMercadoria()
+    {
+
+        MercadoriasAdd.Add(novaMercadoria);
+        await MercadoriaService.AdicionarMercadoria(novaMercadoria);
+        novaMercadoria = new Mercadoria();
+    }
+
+}

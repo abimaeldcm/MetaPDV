@@ -1,0 +1,110 @@
+﻿@page "/relatorios"
+
+@using MetaPDV.Models
+@using MetaPDV.Services
+@using MudBlazor
+@using System.Globalization
+@inject VendaService vendasService
+
+<MudContainer Class="pb-4">
+    <MudPaper Class="pa-4">
+        <MudChart ChartType="ChartType.Pie" InputData="@data" @bind-SelectedIndex="Index" InputLabels="@labels" Width="300px" Height="300px" />
+    </MudPaper>
+</MudContainer>
+<MudContainer>
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Quantidade de Vendas Realizadas</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">@TotalVendas</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Item Mais Vendido</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">@ItemMaisVendida</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Valor Total Arrecadado</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">@TotalArrecadado.ToString("C", new CultureInfo("pt-BR"))</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardContent>
+                    <MudText Typo="Typo.h6" Align="Align.Center">Média de Vendas por Item</MudText>
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mt-2">@MediaVendasPorItem.ToString("C", new CultureInfo("pt-BR"))</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    private int Index = -1; // default value cannot be 0 -> first selectedindex is 0.
+    private double[] data = Array.Empty<double>();
+    private string[] labels = Array.Empty<string>();
+
+    private int TotalVendas { get; set; }
+    private string ItemMaisVendida { get; set; }
+    private decimal TotalArrecadado { get; set; } // Alterado para decimal
+    private decimal MediaVendasPorItem { get; set; } // Alterado para decimal
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTopProducts();
+        await CalculateMetrics();
+    }
+
+    private async Task LoadTopProducts()
+    {
+        var vendas = await vendasService.ListarVendas();
+
+        var topProducts = vendas
+            .SelectMany(v => v.Itens)
+            .GroupBy(i => i.MercadoriaInfo.Nome)
+            .Select(g => new
+            {
+                Nome = g.Key,
+                Total = g.Sum(i => i.Total)
+            })
+            .OrderByDescending(p => p.Total)
+            .Take(5)
+            .ToList();
+
+        labels = topProducts.Select(p => p.Nome).ToArray();
+        data = topProducts.Select(p => (double)p.Total).ToArray();
+    }
+
+    private async Task CalculateMetrics()
+    {
+        var vendas = await vendasService.ListarVendas();
+
+        TotalVendas = vendas.Count();
+
+        var itemMaisVendido = vendas
+            .SelectMany(v => v.Itens)
+            .GroupBy(i => i.MercadoriaInfo.Nome)
+            .OrderByDescending(g => g.Sum(i => i.Total))
+            .FirstOrDefault();
+        ItemMaisVendida = itemMaisVendido?.Key ?? "N/A";
+
+        TotalArrecadado = vendas
+            .SelectMany(v => v.Itens)
+            .Sum(i => i.Total);
+
+        var totalItems = vendas.SelectMany(v => v.Itens).Count();
+        MediaVendasPorItem = totalItems > 0 ? TotalArrecadado / totalItems : 0;
+
+        StateHasChanged();
+    }
+}
+

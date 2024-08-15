@@ -1,0 +1,68 @@
+﻿@page "/"
+
+<style>
+    .rounded-border {
+        border-radius: 8px; 
+    }
+
+    .rounded-paper {
+        border-radius: 12px; 
+    }
+
+    .margin-bottom {
+        margin-bottom: 24px; 
+    }
+</style>
+
+<MudPaper Class="d-flex align-center justify-center min-h-screen p-4 shadow-4 rounded-paper margin-bottom" Elevation="4">
+    <MudContainer>
+        <MudGrid>
+            <MudItem xs="12" Class="my-8 d-flex align-center justify-center">
+                <h1>Bem Vindo ao PDV</h1>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+<MudPaper Class="d-flex align-center justify-center min-h-screen pt-4 pb-5 shadow-4 rounded-paper" Elevation="4">
+    <MudContainer>
+        <MudGrid>
+            <MudItem xs="6" Class="my-2">
+                <MudLink Href="/vendas/iniciar-vendas">
+                    <button Class="mud-theme-primary d-flex align-center justify-center mud-width-full py-8 shadow-4 rounded-border">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Class="mr-2" />
+                        Iniciar Vendas
+                    </button>
+                </MudLink>
+            </MudItem>
+            <MudItem xs="6" Class="my-2">
+                <MudLink Href="/estoque">
+                    <button Class="mud-theme-primary d-flex align-center justify-center mud-width-full py-8 shadow-4 rounded-border">
+                        <MudIcon Icon="@Icons.Material.Filled.Store" Class="mr-2" />
+                        Estoque
+                    </button>
+                </MudLink>
+            </MudItem>
+        </MudGrid>
+        <MudGrid>
+            <MudItem xs="6" Class="my-2">
+                <MudLink Href="/historico-vendas">
+                    <button Class="mud-theme-primary d-flex align-center justify-center mud-width-full py-8 shadow-4 rounded-border">
+                        <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" />
+                        Histórico de Vendas
+                    </button>
+                </MudLink>
+            </MudItem>
+            <MudItem xs="6" Class="my-2">
+                <MudLink Href="/relatorios">
+                    <button Class="mud-theme-primary d-flex align-center justify-center mud-width-full py-8 shadow-4 rounded-border">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-2" />
+                        Relatórios
+                    </button>
+                </MudLink>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+</MudPaper>
+
+

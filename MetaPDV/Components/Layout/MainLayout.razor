@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemingProvider IsDarkMode="_isDark" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudSpacer />
+        <MudIconButton Href="/" Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" />
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Brightness4" Color="Color.Inherit" Edge="Edge.End" OnClick="ThemeToggle" />
+    </MudAppBar>
+    <NavMenu />
+
+    <MudMainContent Class="mt-16 pa-4">
+        @Body
+    </MudMainContent>
+    <footer class="footer">
+        <MudContainer>
+            <MudText Typo="Typo.body2" Align="Align.Center">
+                © 2024 Abimael Mendes. 
+            </MudText>
+        </MudContainer>
+    </footer>
+</MudLayout>
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDark = false;
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ThemeToggle()
+    {
+        _isDark = !_isDark;
+    }
+}

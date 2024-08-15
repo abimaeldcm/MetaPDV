@@ -1,0 +1,137 @@
+﻿@page "/historico-vendas"
+
+@using System.Net.Http.Json
+@using MetaPDV.Models
+@using MetaPDV.Services
+@using MudBlazor
+@using System.Globalization
+@inject ISnackbar Snackbar
+@inject VendaService vendasService
+<MudGrid>
+    <MudItem xs="12">
+        <MudCard>
+            <MudCardHeader>
+                <CardHeaderContent>
+                    <MudText Typo="Typo.h6">Saldo Total</MudText>
+                </CardHeaderContent>
+                <CardHeaderActions>
+                    <MudIconButton OnClick="@ToggleSaldo" Icon="@EyeIcon" Color="Color.Default" />
+                </CardHeaderActions>
+            </MudCardHeader>
+            <MudCardContent>
+                <MudText Typo="Typo.h4">@SaldoText</MudText>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>    
+</MudGrid>
+
+
+<MudTable Items="@vendasDb.OrderByDescending(x => x.Id)" Hover="true" Breakpoint="Breakpoint.Sm">
+    <ColGroup>
+        <col style="width:300px;" />
+        <col style="width:100px;" />
+        <col />
+        <col style="width:100px;" />
+    </ColGroup>
+    <HeaderContent>
+        <MudTh></MudTh>
+        <MudTh>Id</MudTh>
+        <MudTh>Data</MudTh>
+        <MudTh>Total</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd>
+            <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="@(() => ShowBtnPress(context.Id))">
+                @((context.ShowDetails) ? "Ocultar" : "Ver") Itens da Venda
+            </MudButton>
+        </MudTd>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Data">@context.DataVenda.ToString("dd/MM/yyyy")</MudTd>
+        <MudTd DataLabel="Total">@context.Total.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))</MudTd>
+    </RowTemplate>
+    <ChildRowContent>
+        @if (context.ShowDetails)
+        {
+            <MudTr>
+                <MudTd ColSpan="4">
+                    <MudCard Elevation="0">
+                        <MudCardHeader>
+                            <MudText Typo="Typo.body1">
+                                Detalhes da venda de: <strong>@context.DataVenda.ToString("dd/MM/yyyy")</strong>
+                            </MudText>
+                        </MudCardHeader>
+                        <MudCardContent Class="pa-0">
+                            <MudTable Items="@context.Itens" Context="valores" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                <ColGroup>
+                                    <col />
+                                    <col />
+                                    <col style="width:200px;" />
+                                </ColGroup>
+                                <HeaderContent>
+                                    <MudTh>Nome</MudTh>
+                                    <MudTh>Quantidade</MudTh>
+                                    <MudTh>Valor Unidade</MudTh>
+                                    <MudTh>Total</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>@valores.MercadoriaInfo.Nome</MudTd>
+                                    <MudTd>@valores.Quantidade</MudTd>
+                                    <MudTd>@((valores.Total / valores.Quantidade).ToString("C2", new System.Globalization.CultureInfo("pt-BR")))</MudTd>
+                                    <MudTd>@valores.Total.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                </MudTd>
+            </MudTr>
+        }
+    </ChildRowContent>
+</MudTable>
+
+@code
+{
+    private bool isSaldoVisible = false;
+    private decimal Saldo;
+    private decimal SaldoMes;
+    private IEnumerable<Venda> vendasDb = new List<Venda>();
+    private string SaldoText => isSaldoVisible ? Saldo.ToString("C", new CultureInfo("pt-BR")) : "R$ ****";
+    private string EyeIcon => isSaldoVisible ? Icons.Material.Filled.VisibilityOff : Icons.Material.Filled.Visibility;
+
+    protected override async Task OnInitializedAsync()
+    {
+        vendasDb = await vendasService.ListarVendas();
+        CalcularSaldo();
+        CalcularSaldoMesAtual();
+    }
+
+    private void ShowBtnPress(int id)
+    {
+        var venda = vendasDb.FirstOrDefault(v => v.Id == id);
+        if (venda != null)
+        {
+            venda.ShowDetails = !venda.ShowDetails;
+            StateHasChanged(); // Atualiza a UI para refletir a mudança
+        }
+    }
+
+    private void ToggleSaldo()
+    {
+        isSaldoVisible = !isSaldoVisible;
+    }
+
+
+
+    private void CalcularSaldo()
+    {
+        Saldo = vendasDb.Sum(x => x.Total);
+    }
+
+    private void CalcularSaldoMesAtual()
+    {
+        var primeiroDiaDoMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        var ultimoDiaDoMes = primeiroDiaDoMes.AddMonths(1).AddDays(-1);
+        SaldoMes = vendasDb
+            .Where(x => x.DataVenda >= primeiroDiaDoMes && x.DataVenda <= ultimoDiaDoMes)
+            .Sum(x => x.Total);
+    }
+}

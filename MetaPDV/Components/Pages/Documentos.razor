@@ -1,0 +1,29 @@
+﻿@page "/documentos"
+@using MetaPDV.Models
+@using MetaPDV.Services
+@inject VendaService VendaService
+
+<h3>Documentos Emitidos</h3>
+
+@foreach (var venda in vendas)
+{
+    <div>
+        <h4>Venda @venda.Id</h4>
+        <ul>
+            @foreach (var item in venda.Itens)
+            {
+                <li>@item.MercadoriaInfo.Nome - @item.Quantidade x @item.MercadoriaInfo.Preco = @item.Total</li>
+            }
+        </ul>
+        <p>Total: @venda.Total</p>
+    </div>
+}
+
+@code {
+    private List<Venda> vendas;
+
+    protected override async Task OnInitializedAsync()
+    {
+        vendas = (await VendaService.ListarVendas()).ToList();
+    }
+}
