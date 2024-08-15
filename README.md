@@ -7,11 +7,11 @@
 Este projeto é um sistema de vendas completo desenvolvido em .NET e Blazor, que oferece funcionalidades robustas para gerenciamento de vendas, controle de estoque, cadastro de mercadorias, e geração de relatórios detalhados. O sistema foi projetado para ser intuitivo e eficiente, permitindo que os usuários gerenciem suas operações comerciais de maneira simples e eficaz.
 
 ## Tecnologias Utilizadas
-.NET 8: Framework utilizado para o desenvolvimento da aplicação backend.
-Blazor: Framework frontend utilizado para criar a interface de usuário interativa.
-MudBlazor: Biblioteca de componentes Blazor utilizada para estilização e construção de layouts responsivos.
-Dapper: Usado para o acesso e manipulação de dados.
-PostgreSQL: Banco de dados utilizado para armazenar informações sobre produtos, vendas, e usuários.
+- .NET 8: Framework utilizado para o desenvolvimento da aplicação backend.
+- Blazor: Framework frontend utilizado para criar a interface de usuário interativa.
+- MudBlazor: Biblioteca de componentes Blazor utilizada para estilização e construção de layouts responsivos.
+- Dapper: Usado para o acesso e manipulação de dados.
+- PostgreSQL: Banco de dados utilizado para armazenar informações sobre produtos, vendas, e usuários.
 
 ## Funcionalidades Principais
 
