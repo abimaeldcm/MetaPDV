@@ -1,6 +1,8 @@
 # Sistema de Vendas
 
-[![Assista ao Vídeo]](https://www.youtube.com/watch?v=7hneKxe3Yk0)
+[![Assista ao Vídeo de Demonstração](https://www.youtube.com/watch?v=7hneKxe3Yk0/0.jpg)](https://www.youtube.com/watch?v=7hneKxe3Yk0)
+[![Assista ao Vídeo de Demonstração](https://img.youtube.com/vi/OQWDdus_Avc/0.jpg)](https://www.youtube.com/watch?v=OQWDdus_Avc)
+
 
 ## Visão Geral
 
